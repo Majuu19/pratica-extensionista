@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HenSoma - Consultar Cupons</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+Antique:wght@400;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(180deg, #59599B 0%, #24243E 59%, #0F0C29 100%);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Zen Kaku Gothic Antique', Arial, sans-serif;
+      background: #F9F9FA;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    .sidebar {
+      background: var(--primary-gradient);
+      width: 420px;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 32px;
+    }
+
+    .logo {
+      font-size: 3rem;
+      font-weight: 900;
+      margin-bottom: 32px;
+    }
+
+    .sidebar-img {
+      width: 90%;
+      max-width: 320px;
+      margin-bottom: 32px;
+    }
+
+    .sidebar-subtitle {
+      font-size: 1.6rem;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .sidebar-desc {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #D2D2E0;
+      margin-top: 12px;
+    }
+
+    .main {
+      flex: 1;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+    }
+
+    .main-title {
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: #24243E;
+      margin-bottom: 8px;
+    }
+
+    .main-subtitle {
+      font-size: 1rem;
+      color: #424242;
+      text-transform: uppercase;
+      margin-bottom: 30px;
+    }
+
+    .filter-box {
+      background: white;
+      width: 100%;
+      max-width: 900px;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px #AAA5E522;
+      margin-bottom: 30px;
+      display: flex;
+      gap: 20px;
+    }
+
+    .filter-box select,
+    .filter-box input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #757575;
+    }
+
+    .filter-btn {
+      background: #24243E;
+      color: white;
+      padding: 12px 26px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .table-box {
+      width: 100%;
+      max-width: 900px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px #AAA5E522;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 16px;
+      text-align: left;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #F2F2F6;
+    }
+
+    .status-ativo { color: green; font-weight: 900; }
+    .status-vencido { color: red; font-weight: 900; }
+    .status-esgotado { color: #A87C00; font-weight: 900; }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <aside class="sidebar">
+    <div class="logo">HenSoma</div>
+    <img src="consultarcupom.png" class="sidebar-img">
+    <h2 class="sidebar-subtitle">Consultar Cupons</h2>
+    <p class="sidebar-desc">Visualize os cupons disponíveis</p>
+  </aside>
+
+  <main class="main">
+
+    <div class="main-title">Consultar Cupons</div>
+    <div class="main-subtitle">Busque cupons disponíveis</div>
+
+    <div class="filter-box">
+      <select id="filtroCategoria">
+        <option value="">Categoria</option>
+        <option>Alimentação</option>
+        <option>Vestuário</option>
+        <option>Serviços</option>
+        <option>Saúde</option>
+      </select>
+
+      <input type="date" id="filtroInicio">
+      <input type="date" id="filtroFim">
+
+      <button class="filter-btn" onclick="filtrar()">Buscar</button>
+    </div>
+
+    <div class="table-box">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Código</th>
+            <th>Categoria</th>
+            <th>Validade</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="listaCupons"></tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const token = localStorage.getItem("token");
+const user = JSON.parse(localStorage.getItem("user") || 'null');
+const isComerciante = user && user.tipo === 'comerciante';
+let cupons = [];
+
+if (isComerciante) {
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    const titleEl = document.querySelector('.main-title');
+    const subtitleEl = document.querySelector('.main-subtitle');
+    const filterBox = document.querySelector('.filter-box');
+
+    if (titleEl) titleEl.textContent = 'Meus Cupons';
+    if (subtitleEl) subtitleEl.textContent = 'Gerencie os cupons do seu comércio';
+
+    
+    if (filterBox && !document.getElementById('btnCriarCupom')) {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.id = 'btnCriarCupom';
+      btn.textContent = 'Criar Cupom';
+      btn.style.marginLeft = '8px';
+      btn.onclick = () => window.location.href = 'cadastrar_cupom.html';
+      filterBox.appendChild(btn);
+    }
+  });
+}
+
+const categoriaIdParaNome = {
+  1: "Alimentação",
+  2: "Vestuário",
+  3: "Serviços",
+  4: "Saúde"
+};
+
+const categoriaNomeParaId = {
+  "Alimentação": 1,
+  "Vestuário": 2,
+  "Serviços": 3,
+  "Saúde": 4
+};
+
+async function carregarCupons() {
+  try {
+    const headers = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const res = await fetch("http://localhost:3001/api/cupom", { headers });
+    const data = await res.json();
+
+    if (!res.ok || data.status === "error") {
+      throw new Error(data.message || "Erro");
+    }
+
+    cupons = data.data || [];
+    renderizarTabela(cupons);
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao buscar cupons");
+  }
+}
+
+function renderizarTabela(lista) {
+  const tbody = document.getElementById("listaCupons");
+  tbody.innerHTML = "";
+
+  lista.forEach(c => {
+    const hoje = new Date();
+    const fim = new Date(c.data_fim);
+
+    let status = "Ativo";
+    let classe = "status-ativo";
+
+    if (fim < hoje) {
+      status = "Vencido";
+      classe = "status-vencido";
+    } else if (c.quantidade_disponivel <= 0) {
+      status = "Esgotado";
+      classe = "status-esgotado";
+    }
+
+    const categoriaDisplay = c.categoria || categoriaIdParaNome[c.categoria_id] || "-";
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${c.titulo}</td>
+        <td><strong>${c.codigo || "-"}</strong></td>
+        <td>${categoriaDisplay}</td>
+        <td>${formatarData(c.data_inicio)} - ${formatarData(c.data_fim)}</td>
+        <td class="${classe}">${status}</td>
+      </tr>
+    `;
+  });
+}
+
+function filtrar() {
+  const categoria = document.getElementById("filtroCategoria").value.trim();
+  const inicio = document.getElementById("filtroInicio").value;
+  const fim = document.getElementById("filtroFim").value;
+
+  let selectedCategoryId = null;
+  let selectedCategoryName = null;
+  if (categoria) {
+    if (!isNaN(Number(categoria))) {
+      selectedCategoryId = Number(categoria);
+      selectedCategoryName = categoriaIdParaNome[selectedCategoryId] || null;
+    } else {
+      selectedCategoryName = categoria;
+      selectedCategoryId = categoriaNomeParaId[categoria] || null;
+    }
+  }
+
+ 
+  function normalizeDateStr(s) {
+    if (!s) return null;
+    s = s.toString().trim();
+    
+    const slashMatch = s.match(/^(\d{1,2})\s*[\/\.\-]\s*(\d{1,2})\s*[\/\.\-]\s*(\d{4})$/);
+    if (slashMatch) {
+      const d = String(slashMatch[1]).padStart(2, '0');
+      const m = String(slashMatch[2]).padStart(2, '0');
+      const y = slashMatch[3];
+      return `${y}-${m}-${d}`;
+    }
+    
+    const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) return isoMatch[0];
+    
+    const dt = new Date(s);
+    if (!isNaN(dt.getTime())) {
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth() + 1).padStart(2, '0');
+      const d = String(dt.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    return null;
+  }
+
+  function parseYMDtoDate(s) {
+    if (!s) return null;
+    const parts = s.split('-');
+    if (parts.length !== 3) return null;
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  }
+
+  const inicioStr = normalizeDateStr(inicio);
+  const fimStr = normalizeDateStr(fim);
+  const inicioDate = parseYMDtoDate(inicioStr);
+  const fimDate = parseYMDtoDate(fimStr);
+
+  const filtrados = cupons.filter(c => {
+    
+    if (selectedCategoryId || selectedCategoryName) {
+      const cupomCatId = Number(c.categoria_id);
+      const cupomCatName = (c.categoria || categoriaIdParaNome[c.categoria_id] || '').toString().toLowerCase();
+      const matchById = !isNaN(cupomCatId) && selectedCategoryId && cupomCatId === selectedCategoryId;
+      const matchByName = selectedCategoryName && cupomCatName === selectedCategoryName.toLowerCase();
+      if (!(matchById || matchByName)) return false;
+    }
+
+    
+    const rawCupomInicio = c.data_inicio ? String(c.data_inicio).slice(0,10) : c.data_inicio;
+    const rawCupomFim = c.data_fim ? String(c.data_fim).slice(0,10) : c.data_fim;
+    const cupomInicioStr = normalizeDateStr(rawCupomInicio);
+    const cupomFimStr = normalizeDateStr(rawCupomFim);
+    const cupomInicioDate = parseYMDtoDate(cupomInicioStr);
+    const cupomFimDate = parseYMDtoDate(cupomFimStr);
+
+    if (inicioDate && fimDate) {
+      
+      if (cupomFimDate && cupomFimDate < inicioDate) return false;
+      if (cupomInicioDate && cupomInicioDate > fimDate) return false;
+    } else if (inicioDate) {
+      if (cupomFimDate && cupomFimDate < inicioDate) return false;
+    } else if (fimDate) {
+      if (cupomInicioDate && cupomInicioDate > fimDate) return false;
+    }
+
+    return true;
+  });
+
+  renderizarTabela(filtrados);
+}
+
+function formatarData(data) {
+  return new Date(data).toLocaleDateString("pt-BR");
+}
+
+carregarCupons();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HenSoma - Sistema de Cupons</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(180deg, #59599B 0%, #24243E 59%, #0F0C29 100%);
+      --card-gradient: linear-gradient(180deg, #4D4D9E 40%, #34315E 88%);
+      --shadow: 0px 4px 4px #AAA5E5;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      background: #F9F9FA;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      background: var(--primary-gradient);
+      color: #fff;
+      width: 100%;
+      max-width: 470px;
+      min-width: 300px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: stretch;
+      position: relative;
+      padding: 0;
+      overflow: hidden;
+    }
+    .sidebar img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 0;
+      margin: 0;
+      display: block;
+      z-index: 0;
+    }
+    .sidebar .logo {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      margin: 40px 0 10px 0;
+      text-align: center;
+    }
+    .sidebar .welcome {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 900;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .sidebar .desc {
+      color: #BDBDBD;
+      font-size: 1rem;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      padding: 40px 20px;
+    }
+    .main-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #212121;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .main-subtitle {
+      font-family: 'Roboto', sans-serif;
+      font-size: 1.1rem;
+      color: #424242;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .cards {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: var(--card-gradient);
+      box-shadow: var(--shadow);
+      border-radius: 10px;
+      width: 300px;
+      height: 170px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-8px) scale(1.03);
+      box-shadow: 0px 8px 16px #AAA5E5;
+    }
+    .card span {
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 500;
+      text-transform: capitalize;
+      text-align: center;
+    }
+    .register {
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 1rem;
+    }
+    .register span {
+      color: #424242;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 400;
+    }
+    .register a {
+      color: #24243E;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-decoration: none;
+      margin-left: 4px;
+      transition: color 0.2s;
+    }
+    .register a:hover {
+      color: #59599B;
+    }
+    .footer {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #9E9E9E;
+      padding: 12px 32px;
+      background: transparent;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+    .footer .icon {
+      width: 24px;
+      height: 22px;
+      background: #000;
+      border-radius: 4px;
+      margin-right: 8px;
+      display: inline-block;
+    }
+    @media (max-width: 1100px) {
+      .container {
+        flex-direction: column;
+      }
+      .sidebar {
+        max-width: 100%;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: flex-start;
+        padding: 20px 10px;
+        min-height: 220px;
+      }
+      .sidebar img {
+        display: none;
+      }
+      .main {
+        padding: 20px 10px;
+      }
+      .cards {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+    @media (max-width: 700px) {
+      .main-title {
+        font-size: 1.3rem;
+      }
+      .card {
+        width: 90vw;
+        max-width: 320px;
+        height: 120px;
+      }
+      .sidebar .logo, .sidebar .welcome {
+        font-size: 1.2rem;
+      }
+      .footer {
+        flex-direction: column;
+        font-size: 0.8rem;
+        padding: 8px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <img src="maos.png" alt="Imagem de destaque" />
+      <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:100%;padding:40px 20px 40px 20px; padding-top: 100px;">
+        <div style="width:100%;">
+          <div class="logo" style="margin-top: 70px; margin-bottom: 40px; display: flex; align-items: center; justify-content: center;">
+            <span style="display: block;">HenSoma</span>
+        </div>
+        </div>
+        <div style="width:100%;margin-top:auto;">
+          <div class="welcome">Seja bem-vindo ao nosso sistema de cupons</div>
+          <div class="desc">Entre na plataforma para criar, gerenciar e aproveitar cupons exclusivos.</div>
+        </div>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="main-title">Escolha como deseja acessar:</div>
+      <div class="main-subtitle">Venha aproveitar do nosso aplicativo</div>
+      <div class="cards">
+        <a href="login.html" style="text-decoration:none;"><div class="card"><span>sou associado</span></div></a>
+        <a href="login.html" style="text-decoration:none;"><div class="card"><span>sou comerciante</span></div></a>
+      </div>
+      <div class="register">
+        <span>Ainda não é membro?</span>
+        <a href="cadastro.html">Cadastre-se agora.</a>
+      </div>
+      <div class="footer">
+        <div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="22" viewBox="0 0 24 22" fill="none" style="vertical-align: middle; margin-right: 8px;"><circle cx="12" cy="11" r="10" stroke="#9E9E9E" stroke-width="2" fill="#fff"/><path d="M2 11H22" stroke="#9E9E9E" stroke-width="1.5"/><path d="M12 1C15 4.5 15 17.5 12 21C9 17.5 9 4.5 12 1Z" stroke="#9E9E9E" stroke-width="1.5"/></svg>
+          Pratica Extensionista V
+        </div>
+        <div>
+          Copyright 2025 - Sophia Vasco Pires
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

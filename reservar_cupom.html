@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Reservar Cupom - HenSoma</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+Antique:wght@400;900&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary-gradient: linear-gradient(180deg, #59599B 0%, #24243E 59%, #0F0C29 100%);
+  --card-gradient: linear-gradient(180deg, #4D4D9E 40%, #34315E 88%);
+  --shadow: 0px 4px 4px #AAA5E5;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Zen Kaku Gothic Antique', Arial, sans-serif;
+  background: #F9F9FA;
+  height: 100vh;
+  display: flex;
+}
+
+.container {
+  display: flex;
+  width: 100%;
+}
+
+.sidebar {
+  background: var(--primary-gradient);
+  width: 420px;
+  color: white;
+  padding: 60px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 32px;
+}
+
+.sidebar-img {
+  width: 90%;
+  max-width: 320px;
+  margin-bottom: 32px;
+}
+
+.main {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+.main-title {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: #24243E;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.coupons-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+}
+
+.coupon-card {
+  background: var(--card-gradient);
+  width: 260px;
+  border-radius: 12px;
+  padding: 20px;
+  color: white;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coupon-title {
+  font-size: 1.4rem;
+  font-weight: 900;
+}
+
+.reserve-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 900;
+  cursor: pointer;
+  background: #E4E4EE;
+}
+
+.reserve-btn:hover:not(:disabled) {
+  background: #fff;
+}
+
+.reserve-btn:disabled {
+  background: #1a1a1a;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.reserve-btn.reserved {
+  background: #000;
+  color: #eee;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <aside class="sidebar">
+    <div class="logo">HenSoma</div>
+    <img src="reservar.png" class="sidebar-img">
+    <h2>Reservar Cupom</h2>
+    <p>Escolha um cupom disponível</p>
+  </aside>
+
+  <main class="main">
+    <div class="main-title">Cupons Disponíveis</div>
+    <div class="coupons-area" id="listaCupons"></div>
+  </main>
+
+</div>
+
+<script>
+const token = localStorage.getItem("token");
+
+if (!token) {
+  alert("Sessão expirada. Faça login novamente.");
+  window.location.href = "login.html";
+}
+
+async function carregarCupons() {
+  const container = document.getElementById("listaCupons");
+  container.innerHTML = "";
+
+  try {
+    const res = await fetch("http://localhost:3001/api/cupom", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.status === "error") {
+      container.innerHTML = "<p>Erro ao carregar cupons.</p>";
+      return;
+    }
+
+    const cupons = data.data || [];
+
+    if (!cupons.length) {
+      container.innerHTML = "<p>Nenhum cupom disponível.</p>";
+      return;
+    }
+
+    cupons.forEach(c => {
+      const hoje = new Date();
+      const fim = new Date(c.data_fim);
+
+      const jaReservado = Number(c.reservado) === 1;
+      const vencido = fim < hoje;
+      const quantidade = Number(c.quantidade ?? c.quantidade_disponivel ?? 0);
+      const semEstoque = quantidade <= 0;
+
+      const indisponivel = jaReservado || vencido || semEstoque;
+
+      let textoBotao = "Reservar";
+      if (jaReservado) textoBotao = "Reservado";
+      else if (vencido || semEstoque) textoBotao = "Indisponível";
+
+      const card = document.createElement("div");
+      card.className = "coupon-card";
+
+      card.innerHTML = `
+        <div class="coupon-title">${c.nome || c.titulo || '---'}</div>
+        <div>Categoria: ${c.categoria || c.categoria_id || ''}</div>
+        <div>Válido até: ${fim.toLocaleDateString("pt-BR")}</div>
+        <div>Disponíveis: ${quantidade}</div>
+        <button
+          class="reserve-btn ${jaReservado ? 'reserved' : ''}"
+          ${indisponivel ? "disabled" : ""}
+          ${indisponivel ? "" : `onclick="reservar(${c.id})"`}>
+          ${textoBotao}
+        </button>
+      `;
+
+      container.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = "<p>Erro ao conectar com o servidor.</p>";
+  }
+}
+
+async function reservar(cupomId) {
+  try {
+    const res = await fetch("http://localhost:3001/api/cupom/reservar", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ cupom_id: cupomId })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.status === "error") {
+      alert(data.message || "Erro ao reservar cupom");
+      return;
+    }
+
+    alert("Cupom reservado com sucesso!");
+    carregarCupons();
+
+  } catch {
+    alert("Erro ao conectar com o servidor");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", carregarCupons);
+</script>
+
+</body>
+</html>

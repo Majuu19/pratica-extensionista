@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastrar Cupom - HenSoma</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+Antique:wght@400;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(180deg, #59599B 0%, #24243E 59%, #0F0C29 100%);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Zen Kaku Gothic Antique', Arial, sans-serif;
+      background: #F9F9FA;
+      height: 100vh;
+      display: flex;
+    }
+
+    .container {
+      display: flex;
+      width: 100%;
+    }
+
+    .sidebar {
+      background: var(--primary-gradient);
+      max-width: 470px;
+      width: 100%;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 32px;
+    }
+
+    .logo {
+      font-size: 3rem;
+      font-weight: 900;
+      margin-bottom: 32px;
+    }
+
+    .sidebar-img {
+      width: 90%;
+      max-width: 380px;
+      border-radius: 16px;
+      margin-bottom: 32px;
+    }
+
+    .main {
+      flex: 1;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .form-box {
+      background: white;
+      width: 100%;
+      max-width: 600px;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px #AAA5E522;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    label { font-weight: 600; }
+
+    input, select, textarea {
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #757575;
+      width: 100%;
+    }
+
+    textarea {
+      resize: none;
+      height: 90px;
+    }
+
+    .btn {
+      padding: 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 900;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: #24243E;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #D9D9D9;
+      color: #24243E;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <aside class="sidebar">
+    <div class="logo">HenSoma</div>
+    <img src="cadastrarcupom.png" class="sidebar-img">
+    <h2>Cadastro de Cupom</h2>
+    <p>Crie um cupom exclusivo para seus clientes</p>
+  </aside>
+
+  <main class="main">
+
+    <form class="form-box" id="formCupom">
+
+      <label>Nome do Cupom</label>
+      <input id="nome" type="text" required>
+
+      
+
+      <label>Categoria</label>
+      <select id="categoria" required>
+        <option value="">Selecione</option>
+        <option>Alimentação</option>
+        <option>Vestuário</option>
+        <option>Serviços</option>
+        <option>Saúde</option>
+      </select>
+
+      <label>Data de Início</label>
+      <input id="data_inicio" type="date" required>
+
+      <label>Data de Fim</label>
+      <input id="data_fim" type="date" required>
+
+      <label>Quantidade Disponível</label>
+      <input id="quantidade" type="number" min="1" required>
+
+      <label>Tipo de Desconto</label>
+      <select id="tipo_desconto">
+        <option value="percentual">Percentual (%)</option>
+        <option value="fixo">Valor Fixo (R$)</option>
+      </select>
+
+      <div class="buttons">
+        <button type="button" class="btn btn-secondary"
+          onclick="window.location.href='homecomerciante.html'">
+          Voltar
+        </button>
+
+        <button type="submit" class="btn btn-primary">
+          Cadastrar
+        </button>
+      </div>
+
+    </form>
+
+  </main>
+
+</div>
+
+<script>
+document.getElementById("formCupom").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Sessão expirada. Faça login novamente.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  const titulo = document.getElementById("nome").value.trim();
+  const categoriaNome = document.getElementById("categoria").value;
+  const data_inicio = document.getElementById("data_inicio").value;
+  const data_fim = document.getElementById("data_fim").value;
+  const quantidade_total = Number(document.getElementById("quantidade").value);
+  const tipo_desconto = document.getElementById("tipo_desconto").value;
+
+
+if (
+  !titulo ||
+  !categoriaNome ||
+  !data_inicio ||
+  !data_fim ||
+  quantidade_total < 1
+) {
+  alert("Preencha todos os campos obrigatórios.");
+  return;
+}
+
+
+
+  if (data_fim < data_inicio) {
+    alert("A data final não pode ser menor que a data inicial.");
+    return;
+  }
+
+ 
+  const categoriaMap = {
+    "Alimentação": 1,
+    "Vestuário": 2,
+    "Serviços": 3,
+    "Saúde": 4
+  };
+
+  const categoria_id = categoriaMap[categoriaNome];
+  if (!categoria_id) {
+    alert("Categoria inválida.");
+    return;
+  }
+
+  const payload = {
+    titulo,
+    categoria_id,
+    data_inicio,
+    data_fim,
+    quantidade_total
+  };
+
+
+  if (tipo_desconto === "percentual") {
+    payload.percentual_desconto = 10;
+  } else {
+    payload.valor_fixo = 10;
+  }
+
+  try {
+    const res = await fetch("http://localhost:3001/api/cupom", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.status === "error") {
+      alert(data.message || "Erro ao cadastrar cupom");
+      return;
+    }
+
+    alert("Cupom cadastrado com sucesso!");
+    window.location.href = "homecomerciante.html";
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao conectar com o servidor");
+  }
+});
+</script>
+
+</body>
+</html>

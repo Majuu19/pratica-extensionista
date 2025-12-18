@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro - HenSoma</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+Antique:wght@400;900&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary-gradient: linear-gradient(180deg, #59599B 0%, #24243E 59%, #0F0C29 100%);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Zen Kaku Gothic Antique', Arial, sans-serif;
+  background: #F9F9FA;
+  height: 100vh;
+  display: flex;
+}
+
+.container {
+  display: flex;
+  width: 100%;
+}
+
+.sidebar {
+  background: var(--primary-gradient);
+  max-width: 470px;
+  width: 100%;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 32px;
+}
+
+.logo {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 32px;
+}
+
+.sidebar-img {
+  width: 90%;
+  max-width: 380px;
+  border-radius: 16px;
+  margin-bottom: 32px;
+}
+
+.main {
+  flex: 1;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.form-box {
+  background: white;
+  width: 100%;
+  max-width: 520px;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px #AAA5E522;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+label {
+  font-weight: 600;
+}
+
+input, select {
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #757575;
+}
+
+.btn {
+  padding: 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #24243E;
+  color: white;
+}
+
+.btn-secondary {
+  background: #D9D9D9;
+}
+
+.hidden { display: none; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <aside class="sidebar">
+    <div class="logo">HenSoma</div>
+    <img src="cadastrar.png" class="sidebar-img">
+    <h2>Criar Conta</h2>
+    <p>Escolha o tipo de usuário</p>
+  </aside>
+
+  <main class="main">
+
+    <form class="form-box" id="formCadastro">
+
+      <label>Tipo de Usuário</label>
+      <select id="tipoUser">
+        <option value="">Selecione</option>
+        <option value="associado">Sou Associado</option>
+        <option value="comerciante">Sou Comerciante</option>
+      </select>
+
+      <div id="cpfCampo" class="hidden">
+        <label>CPF</label>
+        <input type="text" id="cpf">
+      </div>
+
+      <div id="cnpjCampo" class="hidden">
+        <label>CNPJ</label>
+        <input type="text" id="cnpj">
+      </div>
+
+      <label>Nome Completo</label>
+      <input type="text" id="nome">
+
+      <label>Email</label>
+      <input type="email" id="email">
+
+      <label>Senha</label>
+      <input type="password" id="senha">
+
+      <button type="submit" class="btn btn-primary">Criar Conta</button>
+      <button type="button" class="btn btn-secondary"
+        onclick="window.location.href='login.html'">
+        Voltar ao Login
+      </button>
+
+    </form>
+
+  </main>
+</div>
+
+<script>
+const tipo = document.getElementById("tipoUser");
+const cpfCampo = document.getElementById("cpfCampo");
+const cnpjCampo = document.getElementById("cnpjCampo");
+
+tipo.addEventListener("change", () => {
+  cpfCampo.classList.add("hidden");
+  cnpjCampo.classList.add("hidden");
+
+  if (tipo.value === "associado") cpfCampo.classList.remove("hidden");
+  if (tipo.value === "comerciante") cnpjCampo.classList.remove("hidden");
+});
+
+document.getElementById("formCadastro").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const tipoUser = tipo.value;
+  const nome = document.getElementById("nome").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const senha = document.getElementById("senha").value;
+
+  if (!tipoUser || !nome || !email || !senha) {
+    alert("Preencha todos os campos obrigatórios");
+    return;
+  }
+
+  try {
+    let url = "http://localhost:3001/api/auth/cadastro";
+    let body;
+
+    if (tipoUser === "associado") {
+      url = "http://localhost:3001/api/auth/associado/cadastrar";
+      const cpf = document.getElementById("cpf").value.replace(/\D/g, "");
+      if (!cpf) { alert("Preencha o CPF"); return; }
+      body = { nome, cpf, email, senha };
+    } else if (tipoUser === "comerciante") {
+      url = "http://localhost:3001/api/auth/comercio/cadastrar";
+      const cnpj = document.getElementById("cnpj").value.replace(/\D/g, "");
+      if (!cnpj) { alert("Preencha o CNPJ"); return; }
+body = {
+  razao_social: nome,
+  nome_fantasia: nome,
+  cnpj,
+  email,
+  senha,
+  categoria_id: 1 
+};
+    } else {
+      alert("Tipo de usuário inválido");
+      return;
+    }
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.status === 'error') {
+      alert(data.message || "Erro ao cadastrar");
+      return;
+    }
+
+    alert(data.message || "Cadastro realizado com sucesso!");
+    window.location.href = "login.html";
+
+  } catch {
+    alert("Erro ao conectar com o servidor");
+  }
+});
+</script>
+
+</body>
+</html>

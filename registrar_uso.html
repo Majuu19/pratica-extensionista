@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrar Uso - HenSoma</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+Antique:wght@400;900&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary-gradient: linear-gradient(180deg, #59599B 0%, #24243E 59%, #0F0C29 100%);
+  --shadow: 0px 4px 4px #AAA5E5;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Zen Kaku Gothic Antique', Arial, sans-serif;
+  background: #F9F9FA;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.sidebar {
+  background: var(--primary-gradient);
+  max-width: 470px;
+  width: 100%;
+  color: white;
+  padding: 60px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 32px;
+}
+
+.sidebar-img {
+  width: 90%;
+  max-width: 380px;
+  border-radius: 16px;
+  margin-bottom: 32px;
+}
+
+.sidebar-subtitle {
+  font-size: 1.6rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.sidebar-desc {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #D2D2E0;
+  margin-top: 12px;
+}
+
+.main {
+  flex: 1;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.main-title {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: #24243E;
+}
+
+.main-subtitle {
+  font-size: 1rem;
+  margin-bottom: 30px;
+}
+
+.form-box {
+  background: white;
+  width: 100%;
+  max-width: 480px;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px #AAA5E522;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+label {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+input {
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #757575;
+  font-size: 1rem;
+}
+
+.btn {
+  padding: 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #24243E;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #59599B;
+}
+
+.btn-secondary {
+  background: #D9D9D9;
+  color: #24243E;
+}
+
+.feedback {
+  padding: 12px;
+  background: #D8F5D2;
+  color: #1B6114;
+  border-radius: 6px;
+  font-weight: 700;
+  text-align: center;
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <aside class="sidebar">
+    <div class="logo">HenSoma</div>
+    <img src="registrarcupom.png" class="sidebar-img">
+    <h2 class="sidebar-subtitle">Registrar Uso</h2>
+    <p class="sidebar-desc">
+      Valide e registre o uso de cupons reservados.
+    </p>
+  </aside>
+
+  <main class="main">
+
+    <div class="main-title">Registrar Uso de Cupom</div>
+    <div class="main-subtitle">Informe os dados abaixo</div>
+
+    <div class="form-box">
+
+      <div id="msgOk" class="feedback">✔ Uso registrado com sucesso!</div>
+
+      <div>
+        <label>CPF do Associado</label>
+        <input type="text" id="cpf" placeholder="Digite o CPF">
+      </div>
+
+      <div>
+        <label>Código do Cupom</label>
+        <input type="text" id="codigo" placeholder="Digite o código do cupom">
+      </div>
+
+      <button class="btn btn-primary" onclick="registrarUso()">Registrar Uso</button>
+
+      <button class="btn btn-secondary" onclick="window.location.href='homecomerciante.html'">
+        Voltar
+      </button>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+const token = localStorage.getItem("token");
+
+if (!token) {
+  alert("Sessão expirada. Faça login novamente.");
+  window.location.href = "login.html";
+}
+
+async function registrarUso() {
+  const cpf = document.getElementById("cpf").value.trim();
+  const codigo = document.getElementById("codigo").value.trim();
+
+  if (!cpf || !codigo) {
+    alert("Preencha todos os campos!");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:3001/api/uso", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ cpf, codigo })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.status === 'error') {
+      alert(data.message || "Erro ao registrar uso");
+      return;
+    }
+
+    document.getElementById("msgOk").style.display = "block";
+    document.getElementById("cpf").value = "";
+    document.getElementById("codigo").value = "";
+
+  } catch {
+    alert("Erro ao conectar com o servidor");
+  }
+}
+</script>
+
+</body>
+</html>
